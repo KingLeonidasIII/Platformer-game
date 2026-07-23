@@ -349,7 +349,7 @@ for (const p of platforms) {
 
     else if (!p.visible) {
 
-        p.disappearTimer--;
+        p.disappearTimer -= dt;
 
         if (p.disappearTimer <= 0) {
             p.visible = true;
@@ -373,9 +373,9 @@ if (keys.right) move += 1;
     // slow down when no key is pressed   
     else {
         if (player.onGround) {
-            player.vx *= 0.82;
+            player.vx *= Math.pow(0.82, dt);
         } else {
-            player.vx *= 0.995;
+            player.vx *= Math.pow(0.995, dt);
         }
     }
 
@@ -400,11 +400,11 @@ if (keys.right) move += 1;
     if (player.vy > 15) player.vy = 15; // terminal velocity
 
     // Move horizontally + collisions
-    player.x += player.vx;
+    player.x += player.vx * dt;
     resolveHorizontalCollisions();
 
     // Move vertically + collisions
-    player.y += player.vy;
+    player.y += player.vy * dt;
     player.onGround = false;
     player.standingPlatform = null;
     resolveVerticalCollisions();
@@ -420,8 +420,8 @@ if (keys.right) move += 1;
     const targetX = player.x - W / 3;
     const targetY = player.y - H / 2;
 
-    camera.x += (targetX - camera.x) * 0.1;
-    camera.y += (targetY - camera.y) * 0.1;
+    camera.x += (targetX - camera.x) * 0.1 * dt;
+    camera.y += (targetY - camera.y) * 0.1 * dt;
 
     // Generate more platforms as we go
     while (
@@ -567,7 +567,7 @@ let lastTime = 0;
 
 function gameLoop(currentTime) {
 
-    const deltaTime = (currentTime - lastTime) / 16.67;
+    const deltaTime = Math.min((currentTime - lastTime) / 16.67, 2);
     lastTime = currentTime;
 
     update(deltaTime);

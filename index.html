@@ -117,7 +117,7 @@ const DISAPPEAR_TIME = 120;
 
 const MOVE_RANGE_X = 60;
 const MOVE_RANGE_Y = 40;
-const PLATFORM_MOVE_SPEED = 0.002;
+const PLATFORM_MOVE_SPEED = 1.5;
 const VERTICAL_STEP_MIN = -40;   // can go up or down
 const VERTICAL_STEP_MAX = 50;
 const SEGMENTS_AHEAD = 20;
@@ -293,10 +293,10 @@ document.addEventListener('keyup', (e) => {
 restartBtn.addEventListener('click', init);
 
 // --- Physics & Update ---
-function update() {
+function update(dt) {
     if (gameOver) return;
 
-    const time = performance.now();
+    const time = performance.now() / 1000;
 
 for (const p of platforms) {
     const oldX = p.x;
@@ -367,7 +367,7 @@ if (keys.right) move += 1;
 
     // accelerate while pressing a direction
     if (move !== 0) {
-        player.vx += move * ACCELERATION;
+        player.vx += move * ACCELERATION * dt;
     }
 
     // slow down when no key is pressed   
@@ -396,7 +396,7 @@ if (keys.right) move += 1;
     }
     
     // Gravity
-    player.vy += GRAVITY;
+    player.vy += GRAVITY * dt;
     if (player.vy > 15) player.vy = 15; // terminal velocity
 
     // Move horizontally + collisions
@@ -563,9 +563,16 @@ function updateScore() {
 }
 ctx.globalAlpha = 1;
 // --- Game Loop ---
-function gameLoop() {
-    update();
+let lastTime = 0;
+
+function gameLoop(currentTime) {
+
+    const deltaTime = (currentTime - lastTime) / 16.67;
+    lastTime = currentTime;
+
+    update(deltaTime);
     draw();
+
     requestAnimationFrame(gameLoop);
 }
 

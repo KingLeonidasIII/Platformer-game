@@ -99,6 +99,7 @@ canvas.height = H;
 const GRAVITY = 0.6;
 const JUMP_FORCE = -11;
 const MOVE_SPEED = 5;
+const MAX_JUMP_DISTANCE = 145;
 const PLAYER_W = 22;
 const PLAYER_H = 28;
 const PLATFORM_MIN_W = 50;
@@ -136,6 +137,11 @@ function init() {
     updateScore();
 }
 
+function maxGapForHeight(heightDiff) {
+    const penalty = Math.max(0, heightDiff) * 1.2;
+    return Math.max(60, MAX_JUMP_DISTANCE - penalty);
+}
+
 // --- Procedural Generation ---
 function generateInitialPlatforms() {
     platforms = [];
@@ -150,11 +156,30 @@ function generateInitialPlatforms() {
 }
 
 function generateMorePlatforms() {
-    let last = platforms[platforms.length - 1];
-    let x = last.x + last.w + rand(GAP_MIN, GAP_MAX);
-    let y = clamp(last.y + rand(VERTICAL_STEP_MIN, VERTICAL_STEP_MAX), 80, H - 40);
+    const last = platforms[platforms.length - 1];
+
+    const y = clamp(
+        last.y + rand(VERTICAL_STEP_MIN, VERTICAL_STEP_MAX),
+        80,
+        H - 40
+    );
+
+    const heightDiff = last.y - y;
+    const maxGap = maxGapForHeight(heightDiff);
+
+    const gap = rand(70, maxGap);
+
     const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
-    platforms.push({ x, y, w, h: PLATFORM_H, scored: false });
+
+    const x = last.x + last.w + gap;
+
+    platforms.push({
+        x,
+        y,
+        w,
+        h: PLATFORM_H,
+        scored: false
+    });
 }
 
 function trimPlatforms() {
@@ -236,10 +261,14 @@ function update() {
     camera.y = player.y - H / 2;
 
     // Generate more platforms as we go
-    while (platforms.length < SEGMENTS_AHEAD + SEGMENTS_BEHIND) {
+    while (
+        platforms[platforms.length - 1].x <
+        camera.x + W + 1200
+    ) {
         generateMorePlatforms();
     }
-    trimPlatforms();
+        }
+        trimPlatforms();
 
     // Score: count platforms we've passed
     for (const p of platforms) {

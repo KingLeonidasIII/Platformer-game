@@ -420,8 +420,10 @@ if (keys.right) move += 1;
     const targetX = player.x - W / 3;
     const targetY = player.y - H / 2;
 
-    camera.x += (targetX - camera.x) * 0.1 * dt;
-    camera.y += (targetY - camera.y) * 0.1 * dt;
+    const cameraLerp = 1 - Math.pow(0.9, dt);
+
+    camera.x += (targetX - camera.x) * cameraLerp;
+    camera.y += (targetY - camera.y) * cameraLerp;
 
     // Generate more platforms as we go
     while (
@@ -583,7 +585,7 @@ function gameLoop(currentTime) {
 
 // --- Start ---
 init();
-gameLoop();
+requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>

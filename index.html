@@ -273,35 +273,15 @@ if (keys.right) move += 1;
     }
 
     // limit maximum speed
-    player.vx = clamp(player.vx, -MOVE_SPEED, MOVE_SPEED);
-
-    // coyote time
-    if (player.onGround) {
-        player.coyoteTimer = COYOTE_TIME;
-    } else {
-        player.coyoteTimer--;
-    }
-
-    // jump buffering
-    if (keys.jump) {
-        player.jumpBufferTimer = JUMP_BUFFER_TIME;
-    } else {
-        player.jumpBufferTimer--;
-    }
+    player.vx = clamp(player.vx, -MOVE_SPEED, 
 
     // Jump
-    if (
-    player.jumpBufferTimer > 0 &&
-    player.coyoteTimer > 0
-    ) {
-    player.vy = JUMP_FORCE;
-    player.onGround = false;
-    player.jumpHeld = true;
-
-    player.jumpBufferTimer = 0;
-    player.coyoteTimer = 0;
+    if (keys.jump && player.onGround) {
+        player.vy = JUMP_FORCE;
+        player.onGround = false;
+        player.jumpHeld = true;
     }
-
+                      
     // Variable jump height
     if (!keys.jump && player.jumpHeld && player.vy < 0) {
     player.vy *= JUMP_CUT;

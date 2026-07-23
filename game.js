@@ -69,6 +69,7 @@ class Platform {
     }
 
     init(x, y, w, type) {
+        console.log("Platform.init called with:", x, y, w, type);
         this.x = x;
         this.y = y;
         this.baseX = x;
@@ -448,6 +449,7 @@ class Game {
         const penalty = Math.max(0, heightDiff) * 1.2;
         return Math.max(60, MAX_JUMP_DISTANCE - penalty);
     }
+        console.log("generateInitialPlatforms called");
 
     generateInitialPlatforms() {
         this.platforms = [];
@@ -458,6 +460,7 @@ class Game {
             const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
             const platform = platformPool.acquire().init(x, y, w, 'normal');
             this.platforms.push(platform);
+            console.log("Platform pushed:", platform.x, platform.y, platform.w);
             spatialGrid.insert(platform);
 
             const nextY = clamp(y + rand(VERTICAL_STEP_MIN, VERTICAL_STEP_MAX), 80, H - 40);
@@ -479,6 +482,7 @@ class Game {
 
         const platform = platformPool.acquire().init(x, y, w, this.randomPlatformType());
         this.platforms.push(platform);
+            console.log("Platform pushed:", platform.x, platform.y, platform.w);
         spatialGrid.insert(platform);
     }
 

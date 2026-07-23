@@ -266,9 +266,9 @@ if (keys.right) move += 1;
     // slow down when no key is pressed   
     else {
         if (player.onGround) {
-            player.vx *= 0.82; // ground friction
+            player.vx *= 0.82;
         } else {
-            player.vx *= 0.98; // preserve air momentum    
+            player.vx *= 0.995;
         }
     }
 
@@ -338,14 +338,17 @@ if (keys.right) move += 1;
 function resolveHorizontalCollisions() {
     for (const p of platforms) {
         if (rectOverlap(player, p)) {
+
             if (player.vx > 0) {
                 player.x = p.x - player.w;
-                player.vx = 0;
-            } 
+            }
+
             else if (player.vx < 0) {
                 player.x = p.x + p.w;
-                player.vx = 0;
             }
+
+            // do not kill momentum completely
+            player.vx *= 0.5;
         }
     }
 }

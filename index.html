@@ -101,7 +101,7 @@ const JUMP_FORCE = -11;
 
 const MOVE_SPEED = 5;
 const ACCELERATION = 0.8;
-const DRAG = 0.75; // lower = more friction, higher = more slippery
+const DRAG = 0.92; // lower = more friction, higher = more slippery
 
 const JUMP_CUT = 0.5; // variable jump strength
 const MAX_JUMP_DISTANCE = 170;
@@ -262,7 +262,11 @@ if (move !== 0) {
 
 // slow down when no key is pressed
 else {
-    player.vx *= DRAG;
+    if (player.onGround) {
+        player.vx *= 0.82; // ground friction
+    } else {
+        player.vx *= 0.98; // preserve air momentum
+    }
 }
 
 // limit maximum speed

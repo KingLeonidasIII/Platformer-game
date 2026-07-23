@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Procedural Platformer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: monospace;
+        }
+        #game-wrapper {
+            position: relative;
+            border: 2px solid #333;
+        }
+        canvas {
+            display: block;
+            background: #1a1a2e;
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 16px;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #888;
+            font-size: 12px;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #888;
+            font-size: 12px;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #restart-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #e94560;
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            font-size: 18px;
+            font-family: monospace;
+            cursor: pointer;
+            border-radius: 4px;
+            display: none;
+            z-index: 10;
+            pointer-events: auto;
+        }
+        #restart-btn:hover { background: #ff6b81; }
+    </style>
+</head>
+<body>
+<div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div>Score: <span id="scoreDisplay">0</span></div>
+    </div>
+    <div id="instructions">← → move &nbsp;|&nbsp; SPACE / ↑ jump</div>
+    <div id="controls">procedural platformer</div>
+    <button id="restart-btn">💀 Restart</button>
+</div>
+<script>
+// ============================================================
+//  Procedural Platformer — single-file game for GitHub Pages
+// ============================================================
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const restartBtn = document.getElementById('restart-btn');
+
+// --- Dimensions ---
+const W = 800;
+const H = 500;
+canvas.width = W;
+canvas.height = H;
+
+// --- Constants ---
+const GRAVITY = 0.6;
+const JUMP_FORCE = -11;
+const MOVE_SPEED = 5;
+const PLAYER_W = 22;
+const PLAYER_H = 28;
+const PLATFORM_MIN_W = 50;
+const PLATFORM_MAX_W = 120;
+const PLATFORM_H = 14;
+const GAP_MIN = 80;
+const GAP_MAX = 160;
+const VERTICAL_STEP_MIN = -40;   // can go up or down
+const VERTICAL_STEP_MAX = 50;
+const SEGMENTS_AHEAD = 20;
+const SEGMENTS_BEHIND = 5;
+
+// --- Game State ---
+let player, camera, platforms, score, gameOver, keys;
+
+function init() {
+    player = {
+        x: 60,
+        y: 0,
+        w: PLAYER_W,
+        h: PLAYER_H,
+        vx: 0,
+        vy: 0,
+        onGround: false,
+    };
+    camera = { x: 0, y: 0 };
+    platforms = [];
+    score = 0;
+    gameOver = false;
+    keys = { left: false, right: false, jump: false };
+    restartBtn.style.display = 'none';
+
+    generateInitialPlatforms();
+    player.y = platforms[0].y - PLAYER_H;
+    updateScore();
+}
+
+// --- Procedural Generation ---
+function generateInitialPlatforms() {
+    platforms = [];
+    let x = 0;
+    let y = H - 80;
+    for (let i = 0; i < SEGMENTS_AHEAD; i++) {
+        const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
+        platforms.push({ x, y, w, h: PLATFORM_H, scored: false });
+        x += w + rand(GAP_MIN, GAP_MAX);
+        y = clamp(y + rand(VERTICAL_STEP_MIN, VERTICAL_STEP_MAX), 80, H - 40);
+    }
+}
+
+function generateMorePlatforms() {
+    let last = platforms[platforms.length - 1];
+    let x = last.x + last.w + rand(GAP_MIN, GAP_MAX);
+    let y = clamp(last.y + rand(VERTICAL_STEP_MIN, VERTICAL_STEP_MAX), 80, H - 40);
+    const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
+    platforms.push({ x, y, w, h: PLATFORM_H, scored: false });
+}
+
+function trimPlatforms() {
+    // remove platforms far behind camera
+    while (platforms.length > SEGMENTS_AHEAD + SEGMENTS_BEHIND) {
+        const p = platforms[0];
+        if (p.x + p.w < camera.x - 400) {
+            platforms.shift();
+        } else {
+            break;
+        }
+    }
+}
+
+// --- Helpers ---
+function rand(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function clamp(v, mn, mx) {
+    return Math.max(mn, Math.min(mx, v));
+}
+
+// --- Input ---
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') {
+        e.preventDefault();
+        keys.jump = true;
+    }
+});
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') {
+        keys.jump = false;
+    }
+});
+restartBtn.addEventListener('click', init);
+
+// --- Physics & Update ---
+function update() {
+    if (gameOver) return;
+
+    // Horizontal movement
+    let move = 0;
+    if (keys.left) move -= 1;
+    if (keys.right) move += 1;
+    player.vx = move * MOVE_SPEED;
+
+    // Jump
+    if (keys.jump && player.onGround) {
+        player.vy = JUMP_FORCE;
+        player.onGround = false;
+    }
+
+    // Gravity
+    player.vy += GRAVITY;
+    if (player.vy > 15) player.vy = 15; // terminal velocity
+
+    // Move horizontally + collisions
+    player.x += player.vx;
+    resolveHorizontalCollisions();
+
+    // Move vertically + collisions
+    player.y += player.vy;
+    player.onGround = false;
+    resolveVerticalCollisions();
+
+    // Fall off screen → game over
+    if (player.y > H + 100) {
+        gameOver = true;
+        restartBtn.style.display = 'block';
+        return;
+    }
+
+    // Camera follows player
+    camera.x = player.x - W / 3;
+    camera.y = player.y - H / 2;
+
+    // Generate more platforms as we go
+    while (platforms.length < SEGMENTS_AHEAD + SEGMENTS_BEHIND) {
+        generateMorePlatforms();
+    }
+    trimPlatforms();
+
+    // Score: count platforms we've passed
+    for (const p of platforms) {
+        if (!p.scored && p.x + p.w < player.x) {
+            p.scored = true;
+            score++;
+        }
+    }
+    updateScore();
+}
+
+function resolveHorizontalCollisions() {
+    for (const p of platforms) {
+        if (rectOverlap(player, p)) {
+            if (player.vx > 0) {
+                player.x = p.x - player.w;
+            } else if (player.vx < 0) {
+                player.x = p.x + p.w;
+            }
+            player.vx = 0;
+        }
+    }
+}
+
+function resolveVerticalCollisions() {
+    for (const p of platforms) {
+        if (rectOverlap(player, p)) {
+            if (player.vy > 0) {
+                // landing on top
+                player.y = p.y - player.h;
+                player.vy = 0;
+                player.onGround = true;
+            } else if (player.vy < 0) {
+                // hitting bottom
+                player.y = p.y + p.h;
+                player.vy = 0;
+            }
+        }
+    }
+}
+
+function rectOverlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x &&
+           a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+// --- Render ---
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    // Draw platforms
+    for (const p of platforms) {
+        const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+        grad.addColorStop(0, '#4a90d9');
+        grad.addColorStop(1, '#2c5f8a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(p.x, p.y, p.w, p.h);
+        // top highlight
+        ctx.fillStyle = '#6bb0f5';
+        ctx.fillRect(p.x, p.y, p.w, 3);
+    }
+
+    // Draw player
+    ctx.fillStyle = '#e94560';
+    ctx.shadowColor = '#e94560';
+    ctx.shadowBlur = 12;
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.shadowBlur = 0;
+
+    // Eyes
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(player.x + 5, player.y + 8, 5, 6);
+    ctx.fillRect(player.x + 12, player.y + 8, 5, 6);
+    ctx.fillStyle = '#111';
+    ctx.fillRect(player.x + 6, player.y + 9, 3, 4);
+    ctx.fillRect(player.x + 13, player.y + 9, 3, 4);
+
+    ctx.restore();
+}
+
+function updateScore() {
+    scoreDisplay.textContent = score;
+}
+
+// --- Game Loop ---
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+// --- Start ---
+init();
+gameLoop();
+</script>
+</body>
+</html>

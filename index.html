@@ -74,6 +74,7 @@
     <canvas id="gameCanvas"></canvas>
     <div id="ui">
         <div>Score: <span id="scoreDisplay">0</span></div>
+        <div>High Score: <span id="highScoreDisplay">0</span></div>
     </div>
     <div id="instructions">← → move &nbsp;|&nbsp; SPACE / ↑ jump</div>
     <div id="controls">procedural platformer</div>
@@ -122,9 +123,10 @@ const VERTICAL_STEP_MIN = -40;   // can go up or down
 const VERTICAL_STEP_MAX = 50;
 const SEGMENTS_AHEAD = 20;
 const SEGMENTS_BEHIND = 5;
+const highScoreDisplay = document.getElementById("highScoreDisplay");
 
 // --- Game State ---
-let player, camera, platforms, score, gameOver, keys;
+let player, camera, platforms, score, highScore, gameOver, keys;
 
 function init() {
     player = {
@@ -143,13 +145,15 @@ function init() {
     camera = { x: 0, y: 0 };
     platforms = [];
     score = 0;
+    highScore = Number(localStorage.getItem("highScore")) || 0;
+    highScoreDisplay.textContent = highScore;
     gameOver = false;
     keys = { left: false, right: false, jump: false };
     restartBtn.style.display = 'none';
 
     generateInitialPlatforms();
     player.y = platforms[0].y - PLAYER_H;
-    updateScore();
+    updateScore()
 }
 
 function maxGapForHeight(heightDiff) {
@@ -560,6 +564,12 @@ for (const p of platforms) {
 
 function updateScore() {
     scoreDisplay.textContent = score;
+
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("highScore", highScore);
+        highScoreDisplay.textContent = highScore;
+    }
 }
 ctx.globalAlpha = 1;
 // --- Game Loop ---

@@ -135,6 +135,7 @@ function init() {
         vx: 0,
         vy: 0,
         onGround: false,
+        standingPlatform: null,
         jumpHeld: false,
         coyoteTimer: 0,
         jumpBufferTimer: 0,
@@ -294,6 +295,15 @@ function update() {
     const time = performance.now();
 
 for (const p of platforms) {
+    const oldX = p.x;
+    const oldY = p.y;
+
+    if (player.standingPlatform === p) {
+
+    player.x += p.x - oldX;
+    player.y += p.y - oldY;
+
+    }
 
     // horizontal movement
     if (p.type === "movingHorizontal") {
@@ -328,6 +338,7 @@ for (const p of platforms) {
 
             if (p.disappearTimer <= 0) {
                 p.visible = true;
+                p.disappearTimer = 0;
             }
 
         }
@@ -382,6 +393,7 @@ if (keys.right) move += 1;
     // Move vertically + collisions
     player.y += player.vy;
     player.onGround = false;
+    player.standingPlatform = null;
     resolveVerticalCollisions();
 
     // Fall off screen → game over
@@ -420,6 +432,8 @@ if (keys.right) move += 1;
 
 function resolveHorizontalCollisions() {
     for (const p of platforms) {
+
+    if (!p.visible) continue;
         if (rectOverlap(player, p)) {
 
             if (player.vx > 0) {
@@ -438,8 +452,9 @@ function resolveHorizontalCollisions() {
 
 function resolveVerticalCollisions() {
     const previousBottom = player.y - player.vy + player.h;
+        for (const p of platforms) {
 
-    for (const p of platforms) {
+    if (!p.visible) continue;
 
         if (
             player.vy > 0 &&
@@ -451,6 +466,7 @@ function resolveVerticalCollisions() {
             player.y = p.y - player.h;
             player.vy = 0;
             player.onGround = true;
+            player.standingPlatform = p;
 
 
             if (p.type === "disappearing") {
@@ -488,11 +504,24 @@ function draw() {
 
     // Draw platforms
     for (const p of platforms) {
-        const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
-        grad.addColorStop(0, '#4a90d9');
-        grad.addColorStop(1, '#2c5f8a');
-        ctx.fillStyle = grad;
-        ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    if (p.type === "invisible") {
+        continue;
+    }
+
+    const grad = ctx.createLinearGradient(
+        p.x,
+        p.y,
+        p.x,
+        p.y + p.h
+    );
+
+    grad.addColorStop(0, '#4a90d9');
+    grad.addColorStop(1, '#2c5f8a');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+}
         // top highlight
         ctx.fillStyle = '#6bb0f5';
         ctx.fillRect(p.x, p.y, p.w, 3);

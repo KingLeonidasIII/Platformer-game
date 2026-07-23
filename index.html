@@ -207,14 +207,11 @@ function generateMorePlatforms() {
 }
 
 function trimPlatforms() {
-    // remove platforms far behind camera
-    while (platforms.length > SEGMENTS_AHEAD + SEGMENTS_BEHIND) {
-        const p = platforms[0];
-        if (p.x + p.w < camera.x - 400) {
-            platforms.shift();
-        } else {
-            break;
-        }
+    while (
+        platforms.length > 0 &&
+        platforms[0].x + platforms[0].w < camera.x - 500
+    ) {
+        platforms.shift();
     }
 }
 

@@ -102,6 +102,8 @@ const JUMP_FORCE = -11;
 const MOVE_SPEED = 5;
 const ACCELERATION = 0.8;
 const DRAG = 0.92; // lower = more friction, higher = more slippery
+const COYOTE_TIME = 8;
+const JUMP_BUFFER_TIME = 8;
 
 const JUMP_CUT = 0.5; // variable jump strength
 const MAX_JUMP_DISTANCE = 170;
@@ -129,6 +131,8 @@ function init() {
         vy: 0,
         onGround: false,
         jumpHeld: false,
+        coyoteTimer: 0,
+        jumpBufferTimer: 0,
     };
     camera = { x: 0, y: 0 };
     platforms = [];
@@ -257,7 +261,8 @@ if (keys.right) move += 1;
 
 // accelerate while pressing a direction
 if (move !== 0) {
-    const ACCELERATION = 0.8;
+    player.vx += move * ACCELERATION;
+}
 }
 
 // slow down when no key is pressed
@@ -269,14 +274,34 @@ else {
     }
 }
 
-// limit maximum speed
-player.vx = clamp(player.vx, -MOVE_SPEED, MOVE_SPEED);
+    // limit maximum speed
+    player.vx = clamp(player.vx, -MOVE_SPEED, MOVE_SPEED);
+
+    // coyote time
+    if (player.onGround) {
+        player.coyoteTimer = COYOTE_TIME;
+    } else {
+        player.coyoteTimer--;
+    }
+
+    // jump buffering
+    if (keys.jump) {
+        player.jumpBufferTimer = JUMP_BUFFER_TIME;
+    } else {
+        player.jumpBufferTimer--;
+    }
 
     // Jump
-    if (keys.jump && player.onGround) {
+    if (
+    player.jumpBufferTimer > 0 &&
+    player.coyoteTimer > 0
+    ) {
     player.vy = JUMP_FORCE;
     player.onGround = false;
     player.jumpHeld = true;
+
+    player.jumpBufferTimer = 0;
+    player.coyoteTimer = 0;
     }
 
     // Variable jump height

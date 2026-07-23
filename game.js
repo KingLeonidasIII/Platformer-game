@@ -573,7 +573,16 @@ function clamp(v, min, max) {
 // ============================================================
 //  Initialize Game
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+// Start game when DOM is ready
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+        const game = new Game();
+        game.init();
+    });
+} else {
+    const game = new Game();
+    game.init();
+}
     const game = new Game();
     game.init();
 });

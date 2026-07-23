@@ -298,13 +298,6 @@ for (const p of platforms) {
     const oldX = p.x;
     const oldY = p.y;
 
-    if (player.standingPlatform === p) {
-
-    player.x += p.x - oldX;
-    player.y += p.y - oldY;
-
-    }
-
     // horizontal movement
     if (p.type === "movingHorizontal") {
 
@@ -328,6 +321,12 @@ for (const p of platforms) {
 
     }
 
+    if (player.standingPlatform === p) {
+
+    player.x += p.x - oldX;
+    player.y += p.y - oldY;
+
+    }
 
     // disappearing reset
     if (p.type === "disappearing") {
@@ -503,7 +502,7 @@ function draw() {
     ctx.translate(-camera.x, -camera.y);
 
     // Draw platforms
-    for (const p of platforms) {
+for (const p of platforms) {
 
     if (p.type === "invisible") {
         continue;
@@ -521,10 +520,10 @@ function draw() {
 
     ctx.fillStyle = grad;
     ctx.fillRect(p.x, p.y, p.w, p.h);
-}
-        // top highlight
-        ctx.fillStyle = '#6bb0f5';
-        ctx.fillRect(p.x, p.y, p.w, 3);
+
+    // top highlight
+    ctx.fillStyle = '#6bb0f5';
+    ctx.fillRect(p.x, p.y, p.w, 3);
     }
 
     // Draw player

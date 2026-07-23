@@ -401,13 +401,13 @@ if (keys.right) move += 1;
 
     // Move horizontally + collisions
     player.x += player.vx * dt;
-    resolveHorizontalCollisions();
+    resolveHorizontalCollisions(dt);
 
     // Move vertically + collisions
     player.y += player.vy * dt;
     player.onGround = false;
     player.standingPlatform = null;
-    resolveVerticalCollisions();
+    resolveVerticalCollisions(dt);
 
     // Fall off screen → game over
     if (player.y > H + 100) {
@@ -463,8 +463,8 @@ function resolveHorizontalCollisions() {
     }
 }
 
-function resolveVerticalCollisions() {
-    const previousBottom = player.y - player.vy + player.h;
+function resolveVerticalCollisions(dt) {
+    const previousBottom = player.y - (player.vy * dt) + player.h;
         for (const p of platforms) {
 
     if (!p.visible) continue;
@@ -563,11 +563,16 @@ function updateScore() {
 }
 ctx.globalAlpha = 1;
 // --- Game Loop ---
-let lastTime = 0;
+let lastTime = null;
 
 function gameLoop(currentTime) {
 
+    if (lastTime === null) {
+        lastTime = currentTime;
+    }
+
     const deltaTime = Math.min((currentTime - lastTime) / 16.67, 2);
+
     lastTime = currentTime;
 
     update(deltaTime);

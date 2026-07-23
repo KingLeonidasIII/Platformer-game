@@ -273,7 +273,7 @@ if (keys.right) move += 1;
     }
 
     // limit maximum speed
-    player.vx = clamp(player.vx, -MOVE_SPEED, 
+    player.vx = clamp(player.vx, -MOVE_SPEED, MOVE_SPEED);
 
     // Jump
     if (keys.jump && player.onGround) {

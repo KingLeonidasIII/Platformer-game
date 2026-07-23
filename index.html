@@ -101,7 +101,7 @@ const JUMP_FORCE = -11;
 
 const MOVE_SPEED = 5;
 const ACCELERATION = 0.8;
-const DRAG = 0.85; // lower = more friction, higher = more slippery
+const DRAG = 0.75; // lower = more friction, higher = more slippery
 
 const JUMP_CUT = 0.5; // variable jump strength
 const MAX_JUMP_DISTANCE = 170;
@@ -128,6 +128,7 @@ function init() {
         vx: 0,
         vy: 0,
         onGround: false,
+        jumpHeld: false,
     };
     camera = { x: 0, y: 0 };
     platforms = [];
@@ -269,13 +270,15 @@ player.vx = clamp(player.vx, -MOVE_SPEED, MOVE_SPEED);
 
     // Jump
     if (keys.jump && player.onGround) {
-        player.vy = JUMP_FORCE;
-        player.onGround = false;
+    player.vy = JUMP_FORCE;
+    player.onGround = false;
+    player.jumpHeld = true;
     }
 
     // Variable jump height
-    if (!keys.jump && player.vy < 0) {
-        player.vy *= JUMP_CUT;
+    if (!keys.jump && player.jumpHeld && player.vy < 0) {
+    player.vy *= JUMP_CUT;
+    player.jumpHeld = false;
     }
     
     // Gravity
@@ -330,10 +333,12 @@ function resolveHorizontalCollisions() {
         if (rectOverlap(player, p)) {
             if (player.vx > 0) {
                 player.x = p.x - player.w;
-            } else if (player.vx < 0) {
+                player.vx = 0;
+            } 
+            else if (player.vx < 0) {
                 player.x = p.x + p.w;
+                player.vx = 0;
             }
-            player.vx = 0;
         }
     }
 }

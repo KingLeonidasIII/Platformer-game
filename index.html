@@ -275,8 +275,11 @@ function update() {
     }
 
     // Camera follows player
-    camera.x = player.x - W / 3;
-    camera.y = player.y - H / 2;
+    const targetX = player.x - W / 3;
+    const targetY = player.y - H / 2;
+
+    camera.x += (targetX - camera.x) * 0.1;
+    camera.y += (targetY - camera.y) * 0.1;
 
     // Generate more platforms as we go
     while (

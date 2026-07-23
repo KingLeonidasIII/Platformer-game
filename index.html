@@ -115,9 +115,9 @@ const PLATFORM_H = 14;
 const GAP_MIN = 80;
 const DISAPPEAR_TIME = 120;
 
-const MOVE_RANGE_X = 80;
-const MOVE_RANGE_Y = 60;
-const PLATFORM_MOVE_SPEED = 0.03;
+const MOVE_RANGE_X = 60;
+const MOVE_RANGE_Y = 40;
+const PLATFORM_MOVE_SPEED = 0.002;
 const VERTICAL_STEP_MIN = -40;   // can go up or down
 const VERTICAL_STEP_MAX = 50;
 const SEGMENTS_AHEAD = 20;
@@ -181,10 +181,12 @@ function generateInitialPlatforms() {
 
         scored: false,
 
-        type: randomPlatformType(),
+        type: "normal",
 
         visible: true,
         disappearTimer: 0,
+        disappearDelay: 90,
+        warning: false,
 
         moveOffset: Math.random() * Math.PI * 2
         });
@@ -261,13 +263,15 @@ function clamp(v, mn, mx) {
 }
 
 function randomPlatformType() {
+
     const chance = Math.random();
 
-    if (chance < 0.65) return "normal";
-    if (chance < 0.77) return "disappearing";
-    if (chance < 0.85) return "invisible";
+    if (chance < 0.80) return "normal";
+    if (chance < 0.88) return "disappearing";
     if (chance < 0.93) return "movingHorizontal";
-    return "movingVertical";
+    if (chance < 0.97) return "movingVertical";
+    return "invisible";
+
 }
 
 // --- Input ---
@@ -331,18 +335,28 @@ for (const p of platforms) {
     // disappearing reset
     if (p.type === "disappearing") {
 
-        if (p.disappearTimer > 0) {
+    if (p.warning) {
 
-            p.disappearTimer--;
+        p.disappearTimer--;
 
-            if (p.disappearTimer <= 0) {
-                p.visible = true;
-                p.disappearTimer = 0;
-            }
-
+        if (p.disappearTimer <= 0) {
+            p.visible = false;
+            p.warning = false;
+            p.disappearTimer = DISAPPEAR_TIME;
         }
 
     }
+
+    else if (!p.visible) {
+
+        p.disappearTimer--;
+
+        if (p.disappearTimer <= 0) {
+            p.visible = true;
+        }
+
+    }
+}
 }
 
     // Horizontal movement
@@ -470,8 +484,8 @@ function resolveVerticalCollisions() {
 
             if (p.type === "disappearing") {
 
-             p.visible = false;
-                p.disappearTimer = DISAPPEAR_TIME;
+            p.warning = true;
+            p.disappearTimer = p.disappearDelay;
 
             }
             }
@@ -505,7 +519,7 @@ function draw() {
 for (const p of platforms) {
 
     if (p.type === "invisible") {
-        continue;
+        ctx.globalAlpha = 0.15;
     }
 
     const grad = ctx.createLinearGradient(
@@ -547,7 +561,7 @@ for (const p of platforms) {
 function updateScore() {
     scoreDisplay.textContent = score;
 }
-
+ctx.globalAlpha = 1;
 // --- Game Loop ---
 function gameLoop() {
     update();

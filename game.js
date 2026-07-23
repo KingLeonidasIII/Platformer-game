@@ -49,115 +49,7 @@ canvas.width = W;
 canvas.height = H;
 
 // ============================================================
-//  Spatial Grid for Collision Detection
-// ============================================================
-class SpatialGrid {
-    constructor(cellSize) {
-        this.cellSize = cellSize;
-        this.grid = new Map(); // Key: "x,y", Value: Set of objects
-    }
-
-    clear() {
-        this.grid.clear();
-    }
-
-    insert(obj) {
-        const cells = this.getCellsForObject(obj);
-        for (const cell of cells) {
-            if (!this.grid.has(cell)) {
-                this.grid.set(cell, new Set());
-            }
-            this.grid.get(cell).add(obj);
-        }
-    }
-
-    remove(obj) {
-        const cells = this.getCellsForObject(obj);
-        for (const cell of cells) {
-            if (this.grid.has(cell)) {
-                this.grid.get(cell).delete(obj);
-            }
-        }
-    }
-
-    getCellsForObject(obj) {
-        const cells = [];
-        const minX = Math.floor(obj.x / this.cellSize);
-        const minY = Math.floor(obj.y / this.cellSize);
-        const maxX = Math.floor((obj.x + obj.w) / this.cellSize);
-        const maxY = Math.floor((obj.y + obj.h) / this.cellSize);
-
-        for (let x = minX; x <= maxX; x++) {
-            for (let y = minY; y <= maxY; y++) {
-                cells.push(`${x},${y}`);
-            }
-        }
-        return cells;
-    }
-
-    query(obj) {
-        const results = new Set();
-        const cells = this.getCellsForObject(obj);
-        for (const cell of cells) {
-            if (this.grid.has(cell)) {
-                for (const item of this.grid.get(cell)) {
-                    if (item !== obj) {
-                        results.add(item);
-                    }
-                }
-            }
-        }
-        return Array.from(results);
-    }
-}
-
-// ============================================================
-//  Object Pooling for Platforms
-// ============================================================
-class PlatformPool {
-    constructor() {
-        this.pool = [];
-    }
-
-    acquire() {
-        return this.pool.pop() || this.createPlatform();
-    }
-
-    release(platform) {
-        // Reset platform state
-        platform.x = 0;
-        platform.y = 0;
-        platform.baseX = 0;
-        platform.baseY = 0;
-        platform.w = 0;
-        platform.h = 0;
-        platform.scored = false;
-        platform.type = 'normal';
-        platform.visible = true;
-        platform.disappearTimer = 0;
-        platform.disappearDelay = 90;
-        platform.warning = false;
-        platform.moveOffset = 0;
-        this.pool.push(platform);
-    }
-
-    createPlatform() {
-        return {
-            x: 0, y: 0, baseX: 0, baseY: 0,
-            w: 0, h: PLATFORM_H,
-            scored: false,
-            type: 'normal',
-            visible: true,
-            disappearTimer: 0,
-            disappearDelay: 90,
-            warning: false,
-            moveOffset: Math.random() * Math.PI * 2
-        };
-    }
-}
-
-// ============================================================
-//  Platform Class (Lightweight)
+//  Platform Class
 // ============================================================
 class Platform {
     constructor(x, y, w, type = 'normal') {
@@ -390,7 +282,7 @@ class Player {
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
 
-        // Draw player body (pre-rendered shadow effect)
+        // Draw player body
         ctx.fillStyle = '#e94560';
         ctx.fillRect(this.x, this.y, this.w, this.h);
 
@@ -434,8 +326,6 @@ class Game {
         this.player = null;
         this.camera = new Camera();
         this.platforms = [];
-        this.platformPool = new PlatformPool();
-        this.spatialGrid = new SpatialGrid(GRID_CELL_SIZE);
         this.score = 0;
         this.highScore = Number(localStorage.getItem('highScore')) || 0;
         this.gameOver = false;
@@ -496,6 +386,7 @@ class Game {
 
     handleVisibilityChange() {
         this.isPaused = document.hidden;
+        pauseIndicator.style.display = this.isPaused ? 'block' : 'none';
         if (!this.isPaused) {
             this.lastTime = 0; // Reset timer to avoid large dt
             requestAnimationFrame(this.gameLoop.bind(this));
@@ -504,7 +395,7 @@ class Game {
 
     togglePause() {
         this.isPaused = !this.isPaused;
-        pauseIndicator.style.display = this.isPaused ? "block" : "none";
+        pauseIndicator.style.display = this.isPaused ? 'block' : 'none';
         if (!this.isPaused) {
             this.lastTime = 0;
             requestAnimationFrame(this.gameLoop.bind(this));
@@ -514,8 +405,6 @@ class Game {
     init() {
         // Clean up previous game
         this.removeEventListeners();
-        this.spatialGrid.clear();
-        this.platformPool = new PlatformPool();
 
         // Initialize game state
         this.player = new Player(60, 0);
@@ -556,14 +445,7 @@ class Game {
 
         while (x < 3000) {
             const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
-            const platform = this.platformPool.acquire();
-            platform.x = x;
-            platform.y = y;
-            platform.baseX = x;
-            platform.baseY = y;
-            platform.w = w;
-            platform.type = 'normal';
-            platform.visible = true;
+            const platform = new Platform(x, y, w, 'normal');
             this.platforms.push(platform);
 
             const nextY = clamp(
@@ -594,18 +476,7 @@ class Game {
         const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
         const x = last.x + last.w + gap;
 
-        const platform = this.platformPool.acquire();
-        platform.x = x;
-        platform.y = y;
-        platform.baseX = x;
-        platform.baseY = y;
-        platform.w = w;
-        platform.type = this.randomPlatformType();
-        platform.visible = true;
-        platform.disappearTimer = 0;
-        platform.disappearDelay = platform.type === 'disappearing' ? 90 : 0;
-        platform.warning = false;
-        platform.moveOffset = Math.random() * Math.PI * 2;
+        const platform = new Platform(x, y, w, this.randomPlatformType());
         this.platforms.push(platform);
     }
 
@@ -620,14 +491,12 @@ class Game {
 
     trimPlatforms() {
         while (this.platforms.length > 0 && this.platforms[0].x + this.platforms[0].w < this.camera.x - 500) {
-            const p = this.platforms.shift();
-            this.platformPool.release(p);
+            this.platforms.shift();
         }
 
         // Cap maximum platforms
         while (this.platforms.length > MAX_PLATFORMS) {
-            const p = this.platforms.shift();
-            this.platformPool.release(p);
+            this.platforms.shift();
         }
     }
 
@@ -666,7 +535,6 @@ class Game {
             }
         }
         this.updateScore();
-        pauseIndicator.style.display = 'none';
 
         // Check for game over
         if (this.player.y > H + 100) {

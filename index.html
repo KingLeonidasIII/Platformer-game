@@ -98,7 +98,12 @@ canvas.height = H;
 // --- Constants ---
 const GRAVITY = 0.6;
 const JUMP_FORCE = -11;
+
 const MOVE_SPEED = 5;
+const ACCELERATION = 0.8;
+const DRAG = 0.85; // lower = more friction, higher = more slippery
+
+const JUMP_CUT = 0.5; // variable jump strength
 const MAX_JUMP_DISTANCE = 170;
 const PLAYER_W = 22;
 const PLAYER_H = 28;
@@ -243,10 +248,24 @@ function update() {
     if (gameOver) return;
 
     // Horizontal movement
-    let move = 0;
-    if (keys.left) move -= 1;
-    if (keys.right) move += 1;
-    player.vx = move * MOVE_SPEED;
+    // Horizontal movement with acceleration + drag
+let move = 0;
+
+if (keys.left) move -= 1;
+if (keys.right) move += 1;
+
+// accelerate while pressing a direction
+if (move !== 0) {
+    player.vx += move * ACCELERATION;
+}
+
+// slow down when no key is pressed
+else {
+    player.vx *= DRAG;
+}
+
+// limit maximum speed
+player.vx = clamp(player.vx, -MOVE_SPEED, MOVE_SPEED);
 
     // Jump
     if (keys.jump && player.onGround) {
@@ -254,6 +273,11 @@ function update() {
         player.onGround = false;
     }
 
+    // Variable jump height
+    if (!keys.jump && player.vy < 0) {
+        player.vy *= JUMP_CUT;
+    }
+    
     // Gravity
     player.vy += GRAVITY;
     if (player.vy > 15) player.vy = 15; // terminal velocity

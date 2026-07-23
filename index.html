@@ -257,7 +257,7 @@ if (keys.right) move += 1;
 
 // accelerate while pressing a direction
 if (move !== 0) {
-    player.vx += move * ACCELERATION;
+    const ACCELERATION = 0.8;
 }
 
 // slow down when no key is pressed

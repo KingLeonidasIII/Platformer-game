@@ -253,26 +253,24 @@ function update() {
     if (gameOver) return;
 
     // Horizontal movement
-    // Horizontal movement with acceleration + drag
 let move = 0;
 
 if (keys.left) move -= 1;
 if (keys.right) move += 1;
 
-// accelerate while pressing a direction
-if (move !== 0) {
-    player.vx += move * ACCELERATION;
-
-}
-
-// slow down when no key is pressed
-else {
-    if (player.onGround) {
-        player.vx *= 0.82; // ground friction
-    } else {
-        player.vx *= 0.98; // preserve air momentum
+    // accelerate while pressing a direction
+    if (move !== 0) {
+        player.vx += move * ACCELERATION;
     }
-}
+
+    // slow down when no key is pressed   
+    else {
+        if (player.onGround) {
+            player.vx *= 0.82; // ground friction
+        } else {
+            player.vx *= 0.98; // preserve air momentum    
+        }
+    }
 
     // limit maximum speed
     player.vx = clamp(player.vx, -MOVE_SPEED, MOVE_SPEED);

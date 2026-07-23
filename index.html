@@ -144,18 +144,42 @@ function maxGapForHeight(heightDiff) {
 
 // --- Procedural Generation ---
 function generateInitialPlatforms() {
+
     platforms = [];
+
     let x = 0;
     let y = H - 80;
+
     for (let i = 0; i < SEGMENTS_AHEAD; i++) {
+
         const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
-        platforms.push({ x, y, w, h: PLATFORM_H, scored: false });
-        x += w + rand(GAP_MIN, GAP_MAX);
-        y = clamp(y + rand(VERTICAL_STEP_MIN, VERTICAL_STEP_MAX), 80, H - 40);
+
+        platforms.push({
+            x,
+            y,
+            w,
+            h: PLATFORM_H,
+            scored: false
+        });
+
+        const nextY = clamp(
+            y + rand(VERTICAL_STEP_MIN, VERTICAL_STEP_MAX),
+            80,
+            H - 40
+        );
+
+        const heightDiff = y - nextY;
+        const maxGap = maxGapForHeight(heightDiff);
+
+        const gap = rand(70, maxGap);
+
+        x += w + gap;
+        y = nextY;
     }
 }
 
 function generateMorePlatforms() {
+    console.log("Platforms:", platforms.length);
     const last = platforms[platforms.length - 1];
 
     const y = clamp(
@@ -267,7 +291,7 @@ function update() {
     ) {
         generateMorePlatforms();
     }
-        }
+        
         trimPlatforms();
 
     // Score: count platforms we've passed

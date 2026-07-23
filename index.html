@@ -314,18 +314,31 @@ function resolveHorizontalCollisions() {
 }
 
 function resolveVerticalCollisions() {
+    const previousBottom = player.y - player.vy + player.h;
+
     for (const p of platforms) {
-        if (rectOverlap(player, p)) {
-            if (player.vy > 0) {
-                // landing on top
-                player.y = p.y - player.h;
-                player.vy = 0;
-                player.onGround = true;
-            } else if (player.vy < 0) {
-                // hitting bottom
-                player.y = p.y + p.h;
-                player.vy = 0;
-            }
+
+        if (
+            player.vy > 0 &&
+            previousBottom <= p.y &&
+            player.y + player.h >= p.y &&
+            player.x + player.w > p.x &&
+            player.x < p.x + p.w
+        ) {
+            player.y = p.y - player.h;
+            player.vy = 0;
+            player.onGround = true;
+        }
+
+        if (
+            player.vy < 0 &&
+            player.y <= p.y + p.h &&
+            player.y >= p.y &&
+            player.x + player.w > p.x &&
+            player.x < p.x + p.w
+        ) {
+            player.y = p.y + p.h;
+            player.vy = 0;
         }
     }
 }

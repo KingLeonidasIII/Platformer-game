@@ -150,7 +150,7 @@ function generateInitialPlatforms() {
     let x = 0;
     let y = H - 80;
 
-    for (let i = 0; i < SEGMENTS_AHEAD; i++) {
+    while (x < 3000) {
 
         const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
 
@@ -168,10 +168,9 @@ function generateInitialPlatforms() {
             H - 40
         );
 
-        const heightDiff = y - nextY;
-        const maxGap = maxGapForHeight(heightDiff);
+        const maxGap = maxGapForHeight(y - nextY);
 
-        const gap = rand(70, maxGap);
+        const gap = rand(70, Math.max(70, maxGap));
 
         x += w + gap;
         y = nextY;
@@ -191,7 +190,7 @@ function generateMorePlatforms() {
     const heightDiff = last.y - y;
     const maxGap = maxGapForHeight(heightDiff);
 
-    const gap = rand(70, maxGap);
+    const gap = rand(70, Math.max(70, maxGap));
 
     const w = rand(PLATFORM_MIN_W, PLATFORM_MAX_W);
 

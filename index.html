@@ -520,9 +520,7 @@ function draw() {
     // Draw platforms
 for (const p of platforms) {
 
-    if (p.type === "invisible") {
-        ctx.globalAlpha = 0.15;
-    }
+    ctx.globalAlpha = p.type === "invisible" ? 0.15 : 1;
 
     const grad = ctx.createLinearGradient(
         p.x,
@@ -565,12 +563,14 @@ function updateScore() {
 }
 ctx.globalAlpha = 1;
 // --- Game Loop ---
-let lastTime = null;
+let lastTime = 0;
 
 function gameLoop(currentTime) {
 
-    if (lastTime === null) {
+    if (lastTime === 0) {
         lastTime = currentTime;
+        requestAnimationFrame(gameLoop);
+        return;
     }
 
     const deltaTime = Math.min((currentTime - lastTime) / 16.67, 2);
@@ -582,6 +582,7 @@ function gameLoop(currentTime) {
 
     requestAnimationFrame(gameLoop);
 }
+
 
 // --- Start ---
 init();

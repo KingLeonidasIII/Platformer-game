@@ -265,5 +265,7 @@ function gameLoop(currentTime) {
 }
 
 // --- Start ---
-init();
-gameLoop(0);
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    gameLoop(0);
+});

@@ -67,8 +67,6 @@
             pointer-events: auto;
         }
         #restart-btn:hover { background: #ff6b81; }
-        
-        /* Pause indicator */
         #pause-indicator {
             position: absolute;
             top: 50%;
@@ -91,13 +89,12 @@
         <div>Score: <span id="scoreDisplay">0</span></div>
         <div>High Score: <span id="highScoreDisplay">0</span></div>
     </div>
-    <div id="instructions">← → move &nbsp;|&nbsp; SPACE / ↑ jump &nbsp;|&nbsp; ESC pause</div>
+    <div id="instructions">← → move | SPACE / ↑ jump | ESC pause</div>
     <div id="controls">procedural platformer</div>
     <button id="restart-btn">🎮 Restart</button>
     <div id="pause-indicator">⏸️ PAUSED</div>
 </div>
 
-<!-- Load game script -->
-<script src="game.js" defer></script>
+<script src="game.js"></script>
 </body>
 </html>

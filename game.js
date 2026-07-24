@@ -147,13 +147,16 @@ function update(dt) {
     player.onGround = false;
     for (const p of platforms) {
         if (!p.visible) continue;
-        // Horizontal - only check if NOT standing on this platform
+        // Horizontal - skip if player is standing on this platform
         if (player.x + player.w > p.x && player.x < p.x + p.w &&
-            player.y + player.h > p.y && player.y < p.y + p.h &&
-            !(player.onGround && player.standingPlatform === p)) {
-            if (player.vx > 0) player.x = p.x - player.w;
-            else if (player.vx < 0) player.x = p.x + p.w;
-            player.vx *= 0.5;
+            player.y + player.h > p.y && player.y < p.y + p.h) {
+            // Only apply horizontal collision if NOT standing on top of this platform
+            const standingOnPlatform = (player.y + player.h === p.y);
+            if (!standingOnPlatform) {
+                if (player.vx > 0) player.x = p.x - player.w;
+                else if (player.vx < 0) player.x = p.x + p.w;
+                player.vx *= 0.5;
+            }
         }
         // Vertical (landing on top)
         if (player.vy > 0 && prevY + player.h <= p.y &&

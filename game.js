@@ -147,18 +147,8 @@ function update(dt) {
     player.onGround = false;
     for (const p of platforms) {
         if (!p.visible) continue;
-        // Horizontal - skip if player is standing on this platform
-        if (player.x + player.w > p.x && player.x < p.x + p.w &&
-            player.y + player.h > p.y && player.y < p.y + p.h) {
-            // Only apply horizontal collision if NOT standing on top of this platform
-            const standingOnPlatform = (player.y + player.h === p.y);
-            if (!standingOnPlatform) {
-                if (player.vx > 0) player.x = p.x - player.w;
-                else if (player.vx < 0) player.x = p.x + p.w;
-                player.vx *= 0.5;
-            }
-        }
-        // Vertical (landing on top)
+        
+        // Vertical (landing on top) - check this FIRST
         if (player.vy > 0 && prevY + player.h <= p.y &&
             player.y + player.h >= p.y &&
             player.x + player.w > p.x && player.x < p.x + p.w) {
@@ -171,6 +161,19 @@ function update(dt) {
                 p.disappearTimer = 90;
             }
         }
+        
+        // Horizontal - only check sides, not top
+        if (player.x + player.w > p.x && player.x < p.x + p.w &&
+            player.y + player.h > p.y && player.y < p.y + p.h) {
+            // Skip if standing on this platform (feet at platform top)
+            if (Math.abs((player.y + player.h) - p.y) < 1) {
+                continue;
+            }
+            if (player.vx > 0) player.x = p.x - player.w;
+            else if (player.vx < 0) player.x = p.x + p.w;
+            player.vx *= 0.5;
+        }
+        
         // Vertical (hitting bottom)
         if (player.vy < 0 && player.y <= p.y + p.h &&
             player.y >= p.y &&

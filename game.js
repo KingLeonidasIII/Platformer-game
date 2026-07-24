@@ -147,9 +147,10 @@ function update(dt) {
     player.onGround = false;
     for (const p of platforms) {
         if (!p.visible) continue;
-        // Horizontal
+        // Horizontal - only check if NOT standing on this platform
         if (player.x + player.w > p.x && player.x < p.x + p.w &&
-            player.y + player.h > p.y && player.y < p.y + p.h) {
+            player.y + player.h > p.y && player.y < p.y + p.h &&
+            !(player.onGround && player.standingPlatform === p)) {
             if (player.vx > 0) player.x = p.x - player.w;
             else if (player.vx < 0) player.x = p.x + p.w;
             player.vx *= 0.5;
@@ -161,6 +162,7 @@ function update(dt) {
             player.y = p.y - player.h;
             player.vy = 0;
             player.onGround = true;
+            player.standingPlatform = p;
             if (p.type === 'disappearing') {
                 p.warning = true;
                 p.disappearTimer = 90;

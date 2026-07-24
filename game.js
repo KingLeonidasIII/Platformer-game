@@ -147,12 +147,15 @@ function update(dt) {
     player.onGround = false;
     for (const p of platforms) {
         if (!p.visible) continue;
-        // Horizontal
+        // Horizontal - skip if standing on this platform
         if (player.x + player.w > p.x && player.x < p.x + p.w &&
             player.y + player.h > p.y && player.y < p.y + p.h) {
-            if (player.vx > 0) player.x = p.x - player.w;
-            else if (player.vx < 0) player.x = p.x + p.w;
-            player.vx *= 0.5;
+            const standingOnThis = Math.abs((player.y + player.h) - p.y) < 0.1;
+            if (!standingOnThis) {
+                if (player.vx > 0) player.x = p.x - player.w;
+                else if (player.vx < 0) player.x = p.x + p.w;
+                player.vx *= 0.5;
+            }
         }
         // Vertical (landing on top)
         if (player.vy > 0 && prevY + player.h <= p.y &&
@@ -265,5 +268,7 @@ function gameLoop(currentTime) {
 }
 
 // --- Start ---
-init();
-gameLoop(0);
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    gameLoop(0);
+});

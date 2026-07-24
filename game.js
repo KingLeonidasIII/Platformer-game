@@ -147,12 +147,16 @@ function update(dt) {
     player.onGround = false;
     for (const p of platforms) {
         if (!p.visible) continue;
-        // Horizontal
+        // Horizontal - skip if player is standing on this platform
         if (player.x + player.w > p.x && player.x < p.x + p.w &&
             player.y + player.h > p.y && player.y < p.y + p.h) {
-            if (player.vx > 0) player.x = p.x - player.w;
-            else if (player.vx < 0) player.x = p.x + p.w;
-            player.vx *= 0.5;
+            // Only apply horizontal collision if NOT standing on top of this platform
+            const standingOnPlatform = (player.y + player.h === p.y);
+            if (!standingOnPlatform) {
+                if (player.vx > 0) player.x = p.x - player.w;
+                else if (player.vx < 0) player.x = p.x + p.w;
+                player.vx *= 0.5;
+            }
         }
         // Vertical (landing on top)
         if (player.vy > 0 && prevY + player.h <= p.y &&
@@ -161,6 +165,7 @@ function update(dt) {
             player.y = p.y - player.h;
             player.vy = 0;
             player.onGround = true;
+            player.standingPlatform = p;
             if (p.type === 'disappearing') {
                 p.warning = true;
                 p.disappearTimer = 90;
